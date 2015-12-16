@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Vectorscope example</title>
+	</head>
+	<body>
+		<canvas id="canvas" width="512" height="512"></canvas><br />
+		<input id="input" type="file" /><br />
+		<input id="play" type="button" value="play" />
+		<input id="stop" type="button" value="stop" />
+
+		<script src="vectorscope.js"></script>
+    <script>
+			window.onload = function(){
+
+				var audio = new AudioContext();
+
+				var input = document.getElementById( 'input' );
+				var canvas = document.getElementById( 'canvas' );
+
+				// ------
+
+				var vectorscope = new Vectorscope( audio, canvas );
+				vectorscope.node.connect( audio.destination );
+
+				// ------
+
+				var buffer = null;
+				var source = null;
+
+				var stop = function() {
+					if ( source ) {
+						source.stop();
+					}
+				};
+				document.getElementById( 'stop' ).onclick = function() {
+					stop();
+				};
+
+				var play = function() {
+					if ( buffer ) {
+						source = audio.createBufferSource();
+						source.buffer = buffer;
+						source.connect( vectorscope.node );
+						source.start();
+					}
+				};
+				document.getElementById( 'play' ).onclick = function() {
+					stop();
+					play();
+				};
+
+				input.onchange = function() {
+					stop();
+					var reader = new FileReader();
+					reader.onload = function() {
+						audio.decodeAudioData( reader.result, function( _data ) {
+							buffer = _data;
+						} );
+					};
+					reader.readAsArrayBuffer( input.files[ 0 ] );
+				};
+
+			};
+		</script>
+	</body>
+</html>
